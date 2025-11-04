@@ -17,6 +17,7 @@ const MODEL_RESPONSE_STORAGE_KEY = 'geminiRemovedResponses';
 const MAX_STORED_MODEL_RESPONSES = 10;
 const SANITIZE_REMOVE_SELECTORS = ['.avatar-gutter', '.response-container-header', '.response-container-footer'];
 const SETTINGS_STORAGE_KEY = 'geminiAutoscrollSettings';
+const CONVERSATION_CONTAINER_CLASS = 'conversation-container';
 const DEFAULT_SETTINGS = {
   autoScroll: true,
   autoSave: true,
@@ -191,6 +192,12 @@ function handleMutations(mutationsList) {
       if (candidate) {
         loggedTailRemoval = true;
         logRemovedModelResponse(candidate);
+      } else if (removedNodesContainClass(mutation.removedNodes, CONVERSATION_CONTAINER_CLASS)) {
+        const fallbackCandidate = previousLastModelResponse || lastKnownModelResponse;
+        if (fallbackCandidate && !fallbackCandidate.isConnected) {
+          loggedTailRemoval = true;
+          logRemovedModelResponse(fallbackCandidate);
+        }
       }
     }
 
@@ -299,6 +306,31 @@ function collectModelResponses(removedNodes) {
   }
 
   return Array.from(new Set(responses));
+}
+
+function removedNodesContainClass(removedNodes, className) {
+  if (typeof className !== 'string' || className.trim().length === 0) {
+    return false;
+  }
+
+  for (const node of removedNodes) {
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      if (node.classList && node.classList.contains(className)) {
+        return true;
+      }
+      continue;
+    }
+
+    if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+      for (const child of node.childNodes) {
+        if (child.nodeType === Node.ELEMENT_NODE && child.classList?.contains(className)) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
 }
 
 function getLastModelResponse(container) {
