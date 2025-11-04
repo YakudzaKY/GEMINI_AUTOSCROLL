@@ -22,6 +22,7 @@ let pendingAnimationFrame = null;
 let throttleTimeoutId = null;
 let lastScrollTime = 0;
 let lastKnownModelResponse = null;
+const modelResponseSnapshots = new WeakMap();
 
 const bodyObserver = new MutationObserver(handleMutations);
 observeBodyWhenReady();
@@ -58,6 +59,7 @@ function handleMutations(mutationsList) {
   let shouldScroll = false;
   let loggedTailRemoval = false;
   const previousLastModelResponse = lastKnownModelResponse;
+  let snapshotRequested = false;
 
   for (const mutation of mutationsList) {
     if (mutation.type !== 'childList') {
@@ -97,10 +99,20 @@ function handleMutations(mutationsList) {
 
     if (addedNodesContainTargets(mutation.addedNodes)) {
       shouldScroll = true;
+      snapshotRequested = true;
     }
   }
 
-  lastKnownModelResponse = getLastModelResponse(container);
+  const currentLastModelResponse = getLastModelResponse(container);
+  if (snapshotRequested && currentLastModelResponse) {
+    captureModelResponseSnapshot(currentLastModelResponse);
+  }
+
+  if (currentLastModelResponse !== lastKnownModelResponse && currentLastModelResponse) {
+    captureModelResponseSnapshot(currentLastModelResponse);
+  }
+
+  lastKnownModelResponse = currentLastModelResponse;
 
   if (shouldScroll) {
     debouncedScroll();
@@ -204,6 +216,13 @@ function logRemovedModelResponse(modelResponse) {
     return;
   }
 
+  const cachedSnapshot = modelResponseSnapshots.get(modelResponse);
+  if (cachedSnapshot && cachedSnapshot.trim().length > 0) {
+    persistRemovedModelResponse(cachedSnapshot);
+    modelResponseSnapshots.delete(modelResponse);
+    return;
+  }
+
   try {
     const serialized = serializeModelResponse(modelResponse);
     if (!serialized || serialized.trim().length === 0) {
@@ -277,6 +296,21 @@ function escapeHtml(value) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+function captureModelResponseSnapshot(modelResponse) {
+  if (!modelResponse) {
+    return;
+  }
+
+  try {
+    const serialized = serializeModelResponse(modelResponse);
+    if (serialized && serialized.trim().length > 0) {
+      modelResponseSnapshots.set(modelResponse, serialized);
+    }
+  } catch (error) {
+    console.warn('Failed to cache <model-response> snapshot.', error, modelResponse);
+  }
 }
 
 function persistRemovedModelResponse(serializedHtml) {
