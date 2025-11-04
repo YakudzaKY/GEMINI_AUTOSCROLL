@@ -23,6 +23,7 @@ An unpacked Chrome/Chromium extension that keeps the Gemini web chat (`https://g
 - Scrolls run only while the stop button is visible, preventing accidental jumps during idle states.
 - When the last `<model-response>` disappears from the feed, the script captures its HTML and stores it for the popup to preview or export.
 - The extension popup keeps the most recent `<model-response>` snapshots with a sandboxed preview and raw HTML for quick retrieval.
+- Code blocks inside the popup preview expose a one-click copy button for quick reuse.
 
 ### Files
 
@@ -60,6 +61,7 @@ Everything executes locally; no external dependencies required.
 - Скролл запускается, только если на экране видна кнопка остановки генерации, чтобы не мешать статичным диалогам.
 - Как только исчезает `<model-response>`, скрипт сохраняет его HTML для всплывающего окна, чтобы успеть забрать нужное содержимое.
 - В окне расширения (значок на панели) всегда под рукой свежий список `<model-response>` с изолированным предпросмотром и исходным HTML.
+- В предпросмотре кода во всплывающем окне появилась кнопка «Копировать» в один клик.
 
 ### Файлы
 

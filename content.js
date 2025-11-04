@@ -15,6 +15,7 @@ const MODEL_RESPONSE_SELECTOR = 'model-response';
 const MODEL_RESPONSE_TAG_NAME = 'MODEL-RESPONSE';
 const MODEL_RESPONSE_STORAGE_KEY = 'geminiRemovedResponses';
 const MAX_STORED_MODEL_RESPONSES = 10;
+const SANITIZE_REMOVE_SELECTORS = ['.avatar-gutter'];
 
 let scrollContainer = null;
 let debounceTimer = null;
@@ -252,8 +253,9 @@ function serializeModelResponse(modelResponse) {
     return '';
   }
 
-  if (typeof modelResponse.outerHTML === 'string') {
-    return modelResponse.outerHTML;
+  const sanitizedHtml = getSanitizedOuterHTML(modelResponse);
+  if (sanitizedHtml && sanitizedHtml.trim().length > 0) {
+    return sanitizedHtml;
   }
 
   if (typeof modelResponse.innerHTML === 'string') {
@@ -296,6 +298,54 @@ function escapeHtml(value) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+function getSanitizedOuterHTML(modelResponse) {
+  try {
+    if (!modelResponse || typeof modelResponse.cloneNode !== 'function') {
+      return '';
+    }
+
+    const clone = modelResponse.cloneNode(true);
+    stripUnwantedNodes(clone);
+
+    if (typeof clone.outerHTML === 'string') {
+      return clone.outerHTML;
+    }
+
+    if (typeof clone.innerHTML === 'string') {
+      return clone.innerHTML;
+    }
+
+    return '';
+  } catch (error) {
+    console.warn('Failed to sanitize <model-response> before serialization.', error, modelResponse);
+    return '';
+  }
+}
+
+function stripUnwantedNodes(root) {
+  if (!root || !Array.isArray(SANITIZE_REMOVE_SELECTORS) || SANITIZE_REMOVE_SELECTORS.length === 0) {
+    return;
+  }
+
+  for (const selector of SANITIZE_REMOVE_SELECTORS) {
+    if (typeof selector !== 'string' || selector.trim().length === 0) {
+      continue;
+    }
+
+    if (root.matches && root.matches(selector)) {
+      root.remove();
+      return;
+    }
+
+    if (typeof root.querySelectorAll === 'function') {
+      const matches = root.querySelectorAll(selector);
+      for (const node of matches) {
+        node.remove();
+      }
+    }
+  }
 }
 
 function captureModelResponseSnapshot(modelResponse) {
