@@ -205,15 +205,78 @@ function logRemovedModelResponse(modelResponse) {
   }
 
   try {
-    const serialized =
-      typeof modelResponse.outerHTML === 'string'
-        ? modelResponse.outerHTML
-        : modelResponse.innerHTML || modelResponse.textContent || '';
-
+    const serialized = serializeModelResponse(modelResponse);
+    if (!serialized || serialized.trim().length === 0) {
+      console.warn('Unable to serialize removed <model-response> contents: empty snapshot.');
+      return;
+    }
     persistRemovedModelResponse(serialized);
   } catch (error) {
     console.warn('Failed to serialize removed <model-response> contents.', error, modelResponse);
+    try {
+      const fallback = fallbackSerializeModelResponse(modelResponse);
+      if (fallback) {
+        persistRemovedModelResponse(fallback);
+      }
+    } catch (fallbackError) {
+      console.warn(
+        'Failed to persist fallback serialization for <model-response>.',
+        fallbackError,
+        modelResponse
+      );
+    }
   }
+}
+
+function serializeModelResponse(modelResponse) {
+  if (!modelResponse) {
+    return '';
+  }
+
+  if (typeof modelResponse.outerHTML === 'string') {
+    return modelResponse.outerHTML;
+  }
+
+  if (typeof modelResponse.innerHTML === 'string') {
+    return modelResponse.innerHTML;
+  }
+
+  if (typeof modelResponse.textContent === 'string') {
+    return wrapTextContent(modelResponse.textContent);
+  }
+
+  return '';
+}
+
+function fallbackSerializeModelResponse(modelResponse) {
+  if (!modelResponse || typeof modelResponse.textContent !== 'string') {
+    return '';
+  }
+
+  const trimmed = modelResponse.textContent.trim();
+  if (trimmed.length === 0) {
+    return '';
+  }
+
+  return wrapTextContent(trimmed);
+}
+
+function wrapTextContent(text) {
+  if (typeof text !== 'string' || text.length === 0) {
+    return '';
+  }
+
+  return `<pre class="gemini-autoscroll-text">${escapeHtml(text)}</pre>`;
+}
+
+function escapeHtml(value) {
+  const safe = String(value);
+  return safe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function persistRemovedModelResponse(serializedHtml) {
@@ -223,6 +286,10 @@ function persistRemovedModelResponse(serializedHtml) {
     !chrome.storage.local ||
     typeof serializedHtml !== 'string'
   ) {
+    return;
+  }
+
+  if (serializedHtml.trim().length === 0) {
     return;
   }
 
