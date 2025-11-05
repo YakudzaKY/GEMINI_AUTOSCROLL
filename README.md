@@ -4,6 +4,8 @@
 
 An unpacked Chrome/Chromium extension that keeps the Gemini web chat (`https://gemini.google.com`) pinned to the latest response. The native interface stops rendering when the viewport leaves the streaming area, so long answers get truncated and Gemini reports a connection failure. The content script watches for new DOM nodes and scrolls to the bottom at the right cadence, keeping the response pipeline "alive" until the end.
 
+> 100% of this codebase was built by **CODEX (GPT-5 Codex High)**.
+
 ### Why Google's UI Needs Help
 
 - When the response grows, the freshly appended nodes drop out of Gemini's "active" zone; the streaming pipeline stops delivering tokens even though the connection is fine.
@@ -45,6 +47,8 @@ Everything executes locally; no external dependencies required.
 ## 🇷🇺 Русский
 
 Распакованное расширение для Chrome/Chromium, которое удерживает веб-чат Gemini (`https://gemini.google.com`) на последнем сообщении. В стандартном интерфейсе, если область просмотра выходит за пределы стриминга, нижние блоки становятся «неактивными», Gemini решает, что связь потеряна, и обрывает длинные ответы. Контент-скрипт отслеживает появление новых узлов и своевременно прокручивает чат до конца, позволяя модели договорить до последнего символа.
+
+> 100% кода написано **CODEX (GPT-5 Codex High)**.
 
 ### Зачем это нужно
 
