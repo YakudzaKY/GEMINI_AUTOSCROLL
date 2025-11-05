@@ -351,7 +351,7 @@ function getLastModelResponse(container) {
 }
 
 function logRemovedModelResponse(modelResponse) {
-  if (!autoSaveEnabled || !modelResponse) {
+  if (!autoSaveEnabled || !modelResponse || !isStopButtonVisible()) {
     return;
   }
 
@@ -580,6 +580,10 @@ function debouncedScroll() {
 }
 
 // --- Scroll Logic ---
+function isStopButtonVisible() {
+  return Boolean(document.querySelector(STOP_BUTTON_ICON_SELECTOR));
+}
+
 function smartScrollToBottom() {
   if (!autoScrollEnabled) {
     return;
@@ -600,8 +604,7 @@ function smartScrollToBottom() {
     return;
   }
 
-  const stopButtonVisible = document.querySelector(STOP_BUTTON_ICON_SELECTOR);
-  if (!stopButtonVisible) {
+  if (!isStopButtonVisible()) {
     return;
   }
 
