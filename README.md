@@ -30,6 +30,10 @@
   - `Автоскролл` — удерживает ленту у конца во время генерации.
   - `Автосейв` — снимает и сохраняет последний ответ, если он исчезает.
 
+## Известные проблемы
+
+- При переключении в интерфейсе на другой чат или бота последний ответ Gemini тоже попадает в автосейв. Интерфейс посылает событие удаления, и расширение сохраняет ответ, полагая, что он исчез. Привязка сохранения к активности кнопки `[Stop]` не подходит: при ошибках Gemini сначала отключает кнопку, а только потом очищает поток.
+
 ---
 
 ## English
@@ -63,4 +67,8 @@ All data stays local; no network requests.
 - Use the Options page (via popup or `chrome://extensions`) to configure:
   - `Auto‑Scroll` — keeps the feed pinned to the bottom during generation.
   - `Auto‑Save` — snapshots and stores the latest response when it disappears.
+
+## Known Issues
+
+- Switching to a different chat or bot inside the Gemini interface also triggers an auto-save of the last response. The UI fires a deletion event, so the extension thinks the answer vanished and keeps it. Attempting to gate saving on the `[Stop]` button state failed, because on Gemini errors the button is disabled first and only then the response is cleared.
 
